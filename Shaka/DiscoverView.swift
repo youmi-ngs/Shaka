@@ -34,6 +34,10 @@ struct DiscoverView: View {
     @State private var searchText = ""
     @State private var showingSearch = false
     @State private var showingSearchBar = false
+    @State private var showPostWorkSheet = false
+    @State private var longPressedCoordinate: CLLocationCoordinate2D?
+    @State private var longPressedLocationName: String = ""
+    @State private var pressLocation: CGPoint = .zero
     
     @ViewBuilder
     private var mapView: some View {
@@ -53,10 +57,21 @@ struct DiscoverView: View {
             }
             .mapStyle(.standard(elevation: .flat))
             .edgesIgnoringSafeArea(.bottom)
-            // 長押し機能は一旦無効化（場所の保持が正しく動作しないため）
-            // .onLongPressGesture(minimumDuration: 0.5) {
-            //     handleMapLongPress()
-            // }
+            .gesture(
+                LongPressGesture(minimumDuration: 0.5)
+                    .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .local))
+                    .onEnded { value in
+                        switch value {
+                        case .second(true, let drag):
+                            if let location = drag?.location,
+                               let coordinate = proxy.convert(location, from: .local) {
+                                handleMapLongPress(at: coordinate)
+                            }
+                        default:
+                            break
+                        }
+                    }
+            )
             .onMapCameraChange { context in
                 // Keep region in sync with camera position for iOS 17+
                 region = context.region
@@ -306,6 +321,16 @@ struct DiscoverView: View {
                     locationSharing: locationSharing
                 )
             }
+            .sheet(isPresented: $showPostWorkSheet, onDismiss: {
+                // 投稿後にマップを更新
+                loadPosts()
+            }) {
+                PostWorkView(
+                    viewModel: workViewModel,
+                    presetLocation: longPressedCoordinate,
+                    presetLocationName: longPressedLocationName
+                )
+            }
     }
     
     private func timeRemaining() -> String {
@@ -347,6 +372,46 @@ struct DiscoverView: View {
         }
     }
     
+    private func handleMapLongPress(at coordinate: CLLocationCoordinate2D) {
+        // 触覚フィードバック
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        // 座標を保存
+        longPressedCoordinate = coordinate
+        longPressedLocationName = ""
+
+        // 逆ジオコーディングで地名を取得
+        let geocoder = CLGeocoder()
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            DispatchQueue.main.async {
+                if let placemark = placemarks?.first {
+                    // 地名を組み立て
+                    var components: [String] = []
+                    if let name = placemark.name {
+                        components.append(name)
+                    }
+                    if let locality = placemark.locality {
+                        if !components.contains(locality) {
+                            components.append(locality)
+                        }
+                    }
+                    if let administrativeArea = placemark.administrativeArea {
+                        if !components.contains(administrativeArea) {
+                            components.append(administrativeArea)
+                        }
+                    }
+                    self.longPressedLocationName = components.joined(separator: ", ")
+                }
+
+                // シートを表示
+                self.showPostWorkSheet = true
+            }
+        }
+    }
+
     private func selectSearchResult(_ result: MKLocalSearchCompletion) {
         // 検索結果からMKLocalSearchを実行して詳細な座標を取得
         let request = MKLocalSearch.Request(completion: result)
