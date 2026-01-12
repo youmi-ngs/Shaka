@@ -57,7 +57,7 @@ struct ContentView: View {
             .tag(1)
             
             NavigationView {
-                AskView()
+                AskView()   
                     .popToRootOnTabReselect(tabIndex: 2)
             }
             .navigationViewStyle(StackNavigationViewStyle())

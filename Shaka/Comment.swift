@@ -17,6 +17,8 @@ struct Comment: Identifiable {
     let displayName: String
     let createdAt: Date
     let isPrivate: Bool // true for questions, false for works
+    var likedBy: [String] = [] // いいねしたユーザーIDのリスト
+    var mentionedUserIDs: [String] = [] // メンションされたユーザーIDのリスト
     
     enum PostType: String {
         case work = "work"

@@ -190,30 +190,32 @@ struct UserWorkCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Image
-            if let url = work.imageURL {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fill)
-                        .clipped()
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
-                        .aspectRatio(1, contentMode: .fill)
-                        .overlay(
-                            ProgressView()
-                        )
-                }
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .aspectRatio(1, contentMode: .fill)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 40))
-                    )
-            }
+            Color.clear
+                .aspectRatio(1, contentMode: .fit)
+                .overlay(
+                    Group {
+                        if let url = work.imageURL {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .overlay(ProgressView())
+                            }
+                        } else {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .foregroundColor(.gray)
+                                        .font(.system(size: 40))
+                                )
+                        }
+                    }
+                )
+                .clipped()
             
             // Title
             Text(work.title)

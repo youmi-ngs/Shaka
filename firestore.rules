@@ -97,8 +97,9 @@ service cloud.firestore {
         allow delete: if isAuthenticated()
           && resource.data.userID == request.auth.uid;
         
-        // コメントの更新は禁止
-        allow update: if false;
+        // コメントのいいね更新は誰でも可能（likedByフィールドのみ）
+        allow update: if isAuthenticated()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
       }
       
       // 作品へのいいね
@@ -236,8 +237,9 @@ service cloud.firestore {
         allow delete: if isAuthenticated()
           && resource.data.userID == request.auth.uid;
         
-        // コメントの更新は禁止
-        allow update: if false;
+        // コメントのいいね更新は誰でも可能（likedByフィールドのみ）
+        allow update: if isAuthenticated()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
       }
       
       // 質問へのいいね
@@ -310,8 +312,12 @@ service cloud.firestore {
         // 本人のみ読み取り可能
         allow read: if isOwner(uid);
         
-        // Cloud Functionsのみ作成可能
-        allow create: if false;
+        // 認証済みユーザーが他のユーザーに通知を作成可能
+        allow create: if isAuthenticated()
+          && request.resource.data.keys().hasAll(['type', 'actorUid', 'actorName', 'createdAt', 'read'])
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.type in ['like', 'comment', 'follow', 'mention', 'comment_like']
+          && request.resource.data.read == false;
         
         // 本人のみ更新可能（既読フラグのみ）
         allow update: if isOwner(uid)

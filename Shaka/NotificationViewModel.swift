@@ -45,6 +45,10 @@ struct AppNotification: Identifiable {
             return "person.badge.plus.fill"
         case "comment":
             return "bubble.left.fill"
+        case "comment_like":
+            return "heart.fill"
+        case "mention":
+            return "at"
         default:
             return "bell.fill"
         }
@@ -52,12 +56,14 @@ struct AppNotification: Identifiable {
     
     var iconColor: String {
         switch type {
-        case "like":
+        case "like", "comment_like":
             return "red"
         case "follow":
             return "blue"
         case "comment":
             return "green"
+        case "mention":
+            return "purple"
         default:
             return "gray"
         }

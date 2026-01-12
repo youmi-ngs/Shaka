@@ -393,22 +393,20 @@ struct ProfileView: View {
                 Button(action: {
                     showNotificationList = true
                 }) {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "bell")
-                            .font(.system(size: 20))
-                        
-                        if notificationViewModel.unreadCount > 0 {
-                            Circle()
-                                .fill(Color.red)
-                                .frame(width: 10, height: 10)
-                                .overlay(
-                                    Text("\(min(notificationViewModel.unreadCount, 9))")
-                                        .font(.system(size: 7))
-                                        .foregroundColor(.white)
-                                )
-                                .offset(x: 8, y: -8)
+                    Image(systemName: "bell")
+                        .font(.system(size: 20))
+                        .overlay(alignment: .topTrailing) {
+                            if notificationViewModel.unreadCount > 0 {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 10, height: 10)
+                                    .overlay(
+                                        Text("\(min(notificationViewModel.unreadCount, 9))")
+                                            .font(.system(size: 7))
+                                            .foregroundColor(.white)
+                                    )
+                            }
                         }
-                    }
                 }
             }
         }
